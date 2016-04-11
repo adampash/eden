@@ -10,8 +10,9 @@ config :eden, Eden.Robot,
   rooms: ["labs-test"],
   responders: [
     {Hedwig.Responders.Help, []},
-    {Hedwig.Responders.GreatSuccess, []},
-    {Hedwig.Responders.ShipIt, []}
+    # {Hedwig.Responders.GreatSuccess, []},
+    # {Hedwig.Responders.ShipIt, []},
+    {Hedwig.Responders.Twitter, []},
   ]
 
 
