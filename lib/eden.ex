@@ -7,8 +7,7 @@ defmodule Eden do
     import Supervisor.Spec, warn: false
 
     children = [
-      # Define workers and child supervisors to be supervised
-      # worker(Eden.Worker, [arg1, arg2, arg3]),
+      worker(Eden.Robot, []),
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html

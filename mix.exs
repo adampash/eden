@@ -14,7 +14,7 @@ defmodule Eden.Mixfile do
   #
   # Type "mix help compile.app" for more information
   def application do
-    [applications: [:logger],
+    [applications: [:logger, :hedwig_slack],
      mod: {Eden, []}]
   end
 
@@ -28,6 +28,9 @@ defmodule Eden.Mixfile do
   #
   # Type "mix help deps" for more examples and options
   defp deps do
-    []
+    [
+      {:hedwig_slack, github: "hedwig-im/hedwig_slack"}
+    ]
+
   end
 end
