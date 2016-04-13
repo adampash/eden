@@ -6,16 +6,24 @@ defmodule Hedwig.Responders.Twitter do
   eden follow ev - follows a user and puts tweets in the current channel (or DMs them to you if you're not in a channel)
   """
   respond ~r/follow\s+(\w+)/i, msg do
-    Twitter.Users.follow(msg.matches[1], msg.room)
-    reply msg,
-    """
-      you got it. I'll start following #{msg.matches[1]} and posting new tweets to this channel.
-      here's the latest from #{msg.matches[1]}:
-    """
+    username = msg.matches[1]
+    resp = case ExTwitter.user_search(username, count: 1, include_entities: false) do
+      [] ->
+        "Hmm... couldn't find a twitter user called #{username} :thinking_face:"
+      [user] ->
+        Twitter.Users.follow(user.id_str, msg.room)
+        link = "https://twitter.com/#{user.screen_name}/status/#{user.status.id}"
+        """
+          you got it. I'll start following #{username} and posting new tweets to this channel.
+          here's the latest from #{username}:
+          #{link}
+        """
+    end
+    reply msg, resp
   end
 
   @usage """
-  eden unfollow @ev - unfollows a user from the current channel (or your DMs)
+  eden unfollow ev - unfollows a user from the current channel (or your DMs)
   """
   respond ~r/unfollow\s+(\w+)/i, msg do
     reply msg, "you got it. I'll stop following #{msg.matches[1]} for this channel"

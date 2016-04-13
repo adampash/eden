@@ -47,7 +47,7 @@ defmodule Twitter.Users do
 
   defp update_stream(state, channel) do
     users = Map.get(state, channel)
-    IO.puts("GOT THE MESSAGE AND WILL START FOLLOWING #{users} for #{channel}")
+    IO.puts("GOT THE MESSAGE AND WILL START FOLLOWING #{Enum.join(users, ",")} for #{channel}")
 
     case channel_pid(channel) do
       :undefined ->
