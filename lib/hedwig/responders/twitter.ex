@@ -6,7 +6,7 @@ defmodule Hedwig.Responders.Twitter do
   eden follow ev - follows a user and puts tweets in the current channel (or DMs them to you if you're not in a channel)
   """
   respond ~r/follow\s+(\w+)/i, msg do
-    IO.puts(msg.room)
+    Twitter.Users.follow(msg.matches[1], msg.room)
     reply msg,
     """
       you got it. I'll start following #{msg.matches[1]} and posting new tweets to this channel.

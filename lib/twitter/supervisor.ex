@@ -7,7 +7,7 @@ defmodule Twitter.Supervisor do
 
   def init([]) do
     children = [
-      # worker(Twitter.Follow, []),
+      worker(Twitter.Users, []),
       supervisor(Twitter.Stream.Supervisor, [])
     ]
 
