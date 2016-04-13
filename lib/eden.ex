@@ -8,6 +8,7 @@ defmodule Eden do
 
     children = [
       worker(Eden.Robot, []),
+      supervisor(Twitter.Supervisor, [])
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
