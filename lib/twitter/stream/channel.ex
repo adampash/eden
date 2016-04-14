@@ -2,7 +2,6 @@ defmodule Twitter.Stream.Channel do
   use GenServer
 
   def start_link({channel, _users} = args) do
-    # TODO use gproc here to register channel?
     GenServer.start_link(__MODULE__, args, name: via_tuple(channel))
   end
 
@@ -55,15 +54,16 @@ defmodule Twitter.Stream.Channel do
     IO.puts "Kill previous pid"
     # TODO move process.exit to start_stream after new link spawned
     Process.exit(pid, :new_stream)
-    # IO.puts "Starting to follow #{Enum.join(users, ",")}"
-    # pid = start_stream(channel, users)
-    # new_state = state
-    # |> Tuple.delete_at(1)
-    # |> Tuple.insert_at(1, users)
-    # |> Tuple.delete_at(2)
-    # |> Tuple.append(pid)
-    # IO.inspect new_state
-    # {:noreply, new_state}
+    # none of this gets called right now b/c above crashes process atm
+    IO.puts "Starting to follow #{Enum.join(users, ",")}"
+    pid = start_stream(channel, users)
+    new_state = state
+    |> Tuple.delete_at(1)
+    |> Tuple.insert_at(1, users)
+    |> Tuple.delete_at(2)
+    |> Tuple.append(pid)
+    IO.inspect new_state
+    {:noreply, new_state}
   end
 
   def handle_info({:EXIT, _from, :new_stream}, state) do
