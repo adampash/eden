@@ -14,6 +14,7 @@ defmodule Twitter.Stream.Channel do
   end
 
   def init({channel, users}) do
+    Process.flag(:trap_exit, true)
     GenServer.cast(self, {:start_stream, {channel, users}})
     {:ok, {channel, users}}
   end
@@ -43,37 +44,47 @@ defmodule Twitter.Stream.Channel do
     IO.puts "Starting to follow #{Enum.join(users, ",")}"
     pid = start_stream(channel, users)
 
-    # Process.flag(:trap_exit, true)
 
     new_state = Tuple.append(state, pid)
     IO.inspect new_state
     {:noreply, new_state}
   end
 
-  def handle_cast({:start_stream, {users}}, {channel, _, pid} = state) do
-    IO.puts "Kill previous pid"
-    # TODO move process.exit to start_stream after new link spawned
+  def handle_cast({:start_stream, {users}}, {_channel, _users, pid} = state) do
+    IO.puts "Kill previous streaming pid"
+    # Kill the streaming twitter process; trapped below
     Process.exit(pid, :new_stream)
-    # none of this gets called right now b/c above crashes process atm
+    # sleep; doing this for the twitter streaming api
+
     IO.puts "Starting to follow #{Enum.join(users, ",")}"
-    pid = start_stream(channel, users)
+    # pid = start_stream(channel, users)
     new_state = state
     |> Tuple.delete_at(1)
     |> Tuple.insert_at(1, users)
+    # |> Tuple.delete_at(2)
+    # |> Tuple.append(pid)
+    IO.inspect new_state
+    {:noreply, new_state}
+  end
+
+  def handle_info({:EXIT, _from, :new_stream}, {channel, users, _} = state) do
+    IO.puts "Handling exit for new_stream"
+    IO.puts "Starting to follow #{Enum.join(users, ",")}"
+    :timer.sleep(100)
+    pid = start_stream(channel, users)
+    new_state = state
+    # |> Tuple.delete_at(1)
+    # |> Tuple.insert_at(1, users)
     |> Tuple.delete_at(2)
     |> Tuple.append(pid)
     IO.inspect new_state
     {:noreply, new_state}
   end
 
-  def handle_info({:EXIT, _from, :new_stream}, state) do
-    IO.puts "Exiting for reason: new_stream"
-    {:noreply, state}
-  end
-
   defp start_stream(channel, users) do
     spawn_link(fn ->
       stream = ExTwitter.stream_filter([follow: Enum.join(users, ",")], :infinity)
+      # stream = ExTwitter.stream_filter([track: "apple"], :infinity)
       for tweet <- stream do
         IO.puts "Is this tweet by one of our users? #{Enum.join(users, ",")}: #{tweet.user.id}"
         # IO.puts Enum.any?(users, &(&1 == tweet.user.id_str))
@@ -90,15 +101,3 @@ defmodule Twitter.Stream.Channel do
     end)
   end
 end
-
-# users = ["25375836","2890961","13215132","7144422","8192222","8936082","8315692","47509268"]
-# stream = ExTwitter.stream_filter([follow: Enum.join(users, ",")], :infinity)
-# for tweet <- stream do
-#   IO.puts "Is this tweet by one of our users? #{Enum.join(users, ",")}: #{tweet.user.id}"
-#   # IO.puts Enum.any?(users, &(&1 == tweet.user.id_str))
-#   IO.inspect tweet.user
-#   if Enum.any?(users, &(&1 == tweet.user.id_str)) do
-#     IO.puts "THIS IS ONE OF OUR USERS"
-#     IO.inspect tweet
-#   end
-# end

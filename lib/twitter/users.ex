@@ -49,16 +49,26 @@ defmodule Twitter.Users do
     users = Map.get(state, channel)
     IO.puts("GOT THE MESSAGE AND WILL START FOLLOWING #{Enum.join(users, ",")} for #{channel}")
 
-    case channel_pid(channel) do
-      :undefined ->
-        Supervisor.start_child(Twitter.Stream.Supervisor, [{channel, users}])
-      pid ->
-        Twitter.Stream.Channel.update_stream(pid, users)
-    end
+    channel_pid({channel, users})
+    |> stream
+    # case channel_pid(channel) do
+    #   :undefined ->
+    #     Supervisor.start_child(Twitter.Stream.Supervisor, [{channel, users}])
+    #   pid ->
+    #     Twitter.Stream.Channel.update_stream(pid, users)
+    # end
   end
 
-  def channel_pid(channel) do
-    :gproc.whereis_name(Twitter.Stream.Channel.registered_name(channel))
+  def channel_pid({channel, users}) do
+    pid = :gproc.whereis_name(Twitter.Stream.Channel.registered_name(channel))
+    {pid, channel, users}
+  end
+
+  defp stream({:undefined, channel, users}) do
+    Supervisor.start_child(Twitter.Stream.Supervisor, [{channel, users}])
+  end
+  defp stream({pid, _channel, users}) do
+    Twitter.Stream.Channel.update_stream(pid, users)
   end
 end
 
