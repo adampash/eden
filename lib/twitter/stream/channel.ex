@@ -14,15 +14,10 @@ defmodule Twitter.Stream.Channel do
   end
 
   def init({channel, users}) do
-    Process.flag(:trap_exit, true)
     GenServer.cast(self, {:start_stream, {channel, users}})
     {:ok, {channel, users}}
   end
 
-
-  def update_stream(pid, users) do
-    GenServer.cast(pid, {:start_stream, {users}})
-  end
 
   defp generate_message(pid, tweet, channel) do
     message = %Hedwig.Message{
@@ -46,37 +41,6 @@ defmodule Twitter.Stream.Channel do
 
 
     new_state = Tuple.append(state, pid)
-    IO.inspect new_state
-    {:noreply, new_state}
-  end
-
-  def handle_cast({:start_stream, {users}}, {_channel, _users, pid} = state) do
-    IO.puts "Kill previous streaming pid"
-    # Kill the streaming twitter process; trapped below
-    Process.exit(pid, :new_stream)
-    # sleep; doing this for the twitter streaming api
-
-    IO.puts "Starting to follow #{Enum.join(users, ",")}"
-    # pid = start_stream(channel, users)
-    new_state = state
-    |> Tuple.delete_at(1)
-    |> Tuple.insert_at(1, users)
-    # |> Tuple.delete_at(2)
-    # |> Tuple.append(pid)
-    IO.inspect new_state
-    {:noreply, new_state}
-  end
-
-  def handle_info({:EXIT, _from, :new_stream}, {channel, users, _} = state) do
-    IO.puts "Handling exit for new_stream"
-    IO.puts "Starting to follow #{Enum.join(users, ",")}"
-    :timer.sleep(100)
-    pid = start_stream(channel, users)
-    new_state = state
-    # |> Tuple.delete_at(1)
-    # |> Tuple.insert_at(1, users)
-    |> Tuple.delete_at(2)
-    |> Tuple.append(pid)
     IO.inspect new_state
     {:noreply, new_state}
   end
