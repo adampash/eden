@@ -1,23 +1,22 @@
 defmodule Twitter.Stream.Channel do
   use GenServer
 
-  def start_link({channel, _users} = args) do
-    GenServer.start_link(__MODULE__, args, name: via_tuple(channel))
+  def start_link({id, _channel, _users} = args) do
+    GenServer.start_link(__MODULE__, args, name: via_tuple(id))
   end
 
-  def via_tuple(channel) do
-    {:via, :gproc, registered_name(channel)}
+  def via_tuple(id) do
+    {:via, :gproc, registered_name(id)}
   end
 
-  def registered_name(channel) do
-    {:n, :l, {channel}}
+  def registered_name(id) do
+    {:n, :l, {"stream_#{id}"}}
   end
 
-  def init({channel, users}) do
+  def init({_, channel, users}) do
     GenServer.cast(self, {:start_stream, {channel, users}})
     {:ok, {channel, users}}
   end
-
 
   defp generate_message(pid, tweet, channel) do
     message = %Hedwig.Message{

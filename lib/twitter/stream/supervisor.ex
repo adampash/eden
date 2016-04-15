@@ -7,7 +7,7 @@ defmodule Twitter.Stream.Supervisor do
 
   def init(_opts) do
     children = [
-      worker(Twitter.Stream.Channel, [])
+      worker(Twitter.Stream, [])
     ]
 
     supervise(children, strategy: :simple_one_for_one, name: __MODULE__)
