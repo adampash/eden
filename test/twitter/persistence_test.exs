@@ -3,7 +3,7 @@ defmodule Twitter.PersistenceTest do
 
   test "can set up a database" do
     {:ok, table} = Twitter.Persistence.table(:test_table)
-    assert table == :test_table
+    assert table == "db/test_table"
   end
 
   test "inserts and retrieves values" do

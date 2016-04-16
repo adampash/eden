@@ -1,7 +1,7 @@
 defmodule Twitter.Persistence do
 
   def table(name \\ __MODULE__) do
-    :dets.open_file(db_name(name), [type: :set])
+    open_table(name)
   end
 
   def insert(name \\ __MODULE__, key, value) do
