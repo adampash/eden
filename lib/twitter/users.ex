@@ -1,10 +1,14 @@
 defmodule Twitter.Users do
   use GenServer
+  alias Twitter.Persistence
 
   # External API
   def start_link do
-    GenServer.start_link(__MODULE__, %{users: %{}, channels: %{}}, name: __MODULE__)
+    initial_state = Persistence.lookup(:followed_users) || empty_state
+    GenServer.start_link(__MODULE__, initial_state, name: __MODULE__)
   end
+
+  defp empty_state, do: %{users: %{}, channels: %{}}
 
   def follow({username, user}, channel) do
     GenServer.call(__MODULE__, {:follow, {username, user, channel}})
@@ -23,6 +27,9 @@ defmodule Twitter.Users do
   end
 
   # Internal API
+  def init(args) do
+    {:ok, args}
+  end
 
   @doc """
   Takes a user id and a channel, add it to the state as the key for a map.
@@ -35,6 +42,8 @@ defmodule Twitter.Users do
 
     IO.puts "NEW STATE"
     IO.inspect new_state
+
+    Persistence.insert(:followed_users, new_state)
     {:reply, "Following #{user}", new_state}
   end
 
@@ -42,7 +51,10 @@ defmodule Twitter.Users do
     new_state = unfollow_user(username, user, channel, state)
     |> stream
 
+    IO.puts "NEW STATE"
     IO.inspect new_state
+
+    Persistence.insert(:followed_users, new_state)
     {:reply, "Unfollowed #{user}", new_state}
   end
 
