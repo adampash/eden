@@ -7,7 +7,7 @@ defmodule Eden do
     import Supervisor.Spec, warn: false
 
     children = [
-      # worker(Eden.Robot, []),
+      worker(Eden.Robot, []),
       supervisor(Twitter.Supervisor, [])
     ]
 

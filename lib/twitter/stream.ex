@@ -27,8 +27,8 @@ defmodule Twitter.Stream do
     GenServer.call(pid, :stop_stream)
   end
 
+  # Internal API
   def handle_call({:update_users, users}, _from, _state) do
-    # stop_stream(stream_pid)
     stream_pid = start_stream(users)
     {:reply, "Starting", {users, stream_pid}}
   end
@@ -47,7 +47,6 @@ defmodule Twitter.Stream do
     IO.puts "Starting stream for #{Enum.join(users, ",")}..."
     stream = ExTwitter.stream_filter([follow: Enum.join(users, ",")], :infinity)
     spawn_link(fn ->
-      # stream = ExTwitter.stream_filter([track: "apple"], :infinity)
       for tweet <- stream do
         IO.puts "Is this tweet by one of our users? #{Enum.join(users, ",")}: #{tweet.user.id}"
         # IO.puts Enum.any?(users, &(&1 == tweet.user.id_str))

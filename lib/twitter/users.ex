@@ -2,21 +2,24 @@ defmodule Twitter.Users do
   use GenServer
 
   # External API
-
   def start_link do
-    GenServer.start_link(__MODULE__, %{}, name: __MODULE__)
+    GenServer.start_link(__MODULE__, %{users: %{}, channels: %{}}, name: __MODULE__)
   end
 
-  def follow(user, channel) do
-    GenServer.call(__MODULE__, {:follow, {user, channel}})
+  def follow({username, user}, channel) do
+    GenServer.call(__MODULE__, {:follow, {username, user, channel}})
   end
 
-  def unfollow(user, channel) do
-    GenServer.call(__MODULE__, {:unfollow, {user, channel}})
+  def unfollow({username, user}, channel) do
+    GenServer.call(__MODULE__, {:unfollow, {username, user, channel}})
   end
 
   def new_tweet(tweet) do
     GenServer.cast(__MODULE__, {:new_tweet, tweet})
+  end
+
+  def following(channel) do
+    GenServer.call(__MODULE__, {:following, channel})
   end
 
   # Internal API
@@ -26,64 +29,95 @@ defmodule Twitter.Users do
   The value for the key is a list of channels that are watching
   the user.
   """
-  def handle_call({:follow, {user, channel}}, _from, state) do
-    new_state = Map.get(state, user)
-    |> follow_user(user, channel, state)
+  def handle_call({:follow, {username, user, channel}}, _from, state) do
+    new_state = follow_user(username, user, channel, state)
     |> stream
 
+    IO.puts "NEW STATE"
     IO.inspect new_state
     {:reply, "Following #{user}", new_state}
   end
 
-  def handle_call({:unfollow, {user, channel}}, _from, state) do
-    new_state = Map.get(state, user)
-    |> unfollow_user(user, channel, state)
+  def handle_call({:unfollow, {username, user, channel}}, _from, state) do
+    new_state = unfollow_user(username, user, channel, state)
     |> stream
 
     IO.inspect new_state
     {:reply, "Unfollowed #{user}", new_state}
   end
 
+  def handle_call({:following, channel}, _from, state) do
+    usernames = get_in(state, [:channels, channel])
+
+    {:reply, usernames, state}
+  end
+
   def handle_cast({:new_tweet, tweet}, state) do
-    # Hedwig.Registry.whereis(Eden.Robot)
-    # |> generate_message(tweet, channel)
-    # |> send_tweet
+    user = tweet.user.id_str
+    channels = get_in(state, [:users, user])
+    Twitter.Message.send(tweet, channels)
     IO.inspect tweet.user.screen_name
     IO.inspect tweet.text
     {:noreply, state}
   end
 
-  defp follow_user(nil, user, channel, state) do
-    Map.put(state, user, [channel])
-  end
-
-  defp follow_user(channels, user, channel, state) do
-    Map.put(state, user, Enum.uniq([channel | channels]))
-  end
-
-  defp unfollow_user(nil, _, _, state) do
+  def follow_user(username, user, channel, state) do
     state
+    |> add_to([:users, user], channel)
+    |> add_to([:channels, channel], username)
   end
 
-  defp unfollow_user(channels, user, channel, state) do
-    case List.delete(channels, channel) do
-      [] -> Map.delete(state, user)
-      channels -> Map.put(state, user, channels)
-    end
+  defp add_to(state, path, value) do
+    state
+    |> update_in(path, fn
+      nil ->
+        [value]
+      v ->
+        Enum.uniq([value | v])
+    end)
   end
+
+  defp remove_from(state, path, value) do
+    state
+    |> update_in(path, fn
+      nil ->
+        []
+      v ->
+        List.delete(v, value)
+    end)
+  end
+
+  def unfollow_user(username, user, channel, state) do
+    state
+    |> remove_from([:users, user], channel)
+    |> remove_from([:channels, channel], username)
+    |> clean_empty(:users)
+    |> clean_empty(:channels)
+  end
+
+  def clean_empty(state, key) do
+    val = Map.get(state, key)
+    |> Enum.filter(&_clean_empty/1)
+    |> Enum.into(%{})
+
+    Map.put(state, key, val)
+  end
+
+  defp _clean_empty({_, []}), do: false
+  defp _clean_empty({_, _}), do: true
 
   defp stream(state) do
-    users = Map.keys(state)
-    state
+    get_in(state, [:users])
+    |> Map.keys
     |> stop_stream
     |> start_stream
+
+    state
   end
 
-  defp start_stream(state) do
-    users = Map.keys state
+  defp start_stream(users) do
     stream_pid(0)
     |> _start_stream(users)
-    state
   end
 
   defp _start_stream(:undefined, users) do
@@ -92,14 +126,13 @@ defmodule Twitter.Users do
 
   defp _start_stream(pid, users) do
     Twitter.Stream.update_users(pid, users)
-    # Supervisor.start_child(Twitter.Stream.Supervisor, [{0, users}])
   end
 
-  defp stop_stream(state) do
+  defp stop_stream(users) do
     stream_pid(0)
     |> kill_stream
 
-    state
+    users
   end
 
   defp kill_stream(:undefined) do
@@ -110,41 +143,6 @@ defmodule Twitter.Users do
   end
 
   def stream_pid(id) do
-    pid = :gproc.whereis_name(Twitter.Stream.Channel.registered_name(id))
-    # {pid, channel, users}
+    :gproc.whereis_name(Twitter.Stream.Channel.registered_name(id))
   end
 end
-
-  #
-  # defp follow_user(nil, user, channel, state) do
-  #   Map.put(state, user, [channel])
-  # end
-  # defp follow_user(channels, user, channel, state) do
-  #   Map.put(state, user, Enum.uniq([channel | channels]))
-  # end
-  #
-  # defp update_stream(state) do
-  #   users = Map.keys(state)
-  #   IO.puts("GOT THE MESSAGE AND WILL START FOLLOWING #{Enum.join(users, ",")} for #{}")
-  #
-  #   channel_pid(0)
-  #   |> start_stream
-  # end
-  #
-  # def channel_pid(id) do
-  #   pid = :gproc.whereis_name(Twitter.Stream.Channel.registered_name(id))
-  #   {pid, channel, users}
-  # end
-  #
-  # defp start_stream({:undefined, channel, users}) do
-  #   # This should eventually support multiple streams with different
-  #   # Twitter API keys; 0 here is hard-coding the first of these streams
-  #   Supervisor.start_child(Twitter.Stream.Supervisor, [{0, channel, users}])
-  # end
-  #
-  # defp start_stream({pid, channel, users}) do
-  #   Supervisor.terminate_child(Twitter.Stream.Supervisor, pid)
-  #   # start_stream({:undefined, channel, users})
-  #   Twitter.Stream.Channel.update_stream(pid, users)
-  # end
-# end
