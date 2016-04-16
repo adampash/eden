@@ -4,33 +4,48 @@ defmodule Twitter.UsersTest do
   test "follows new users" do
     state = %{users: %{}, channels: %{}}
     new_state = Twitter.Users.follow_user("adampash", "123456", "D78UX1", state)
-    assert new_state == %{users: %{"123456" => ["D78UX1"]}, channels: %{"D78UX1" => ["adampash"]}}
+    assert new_state == %{
+      users: %{"123456" => ["D78UX1"]},
+      channels: %{"D78UX1" => ["adampash"]}
+    }
   end
 
   test "doesn't duplicate users" do
-    state = %{users: %{"123456" => ["D78UX1"]}, channels: %{"D78UX1" => ["adampash"]}}
+    state = %{
+      users: %{"123456" => ["D78UX1"]},
+      channels: %{"D78UX1" => ["adampash"]}
+    }
     new_state = Twitter.Users.follow_user("adampash", "123456", "D78UX1", state)
 
-    assert new_state == %{users: %{"123456" => ["D78UX1"]}, channels: %{"D78UX1" => ["adampash"]}}
+    assert new_state == %{
+      users: %{"123456" => ["D78UX1"]},
+      channels: %{"D78UX1" => ["adampash"]}
+    }
   end
 
   test "unfollows users" do
-    state = %{users: %{"123456" => ["D78UX1"]}, channels: %{"D78UX1" => ["adampash"]}}
-    new_state = Twitter.Users.unfollow_user("adampash", "123456", "D78UX1", state)
+    state = %{
+      users: %{"123456" => ["D78UX1"]},
+      channels: %{"D78UX1" => ["adampash"]}
+    }
+    new_state = Twitter.Users.unfollow_user(
+                  "adampash", "123456", "D78UX1", state
+                )
 
     assert new_state == %{users: %{}, channels: %{}}
   end
 
   test "clears keys when their value is an empty array" do
     state = %{
-      users: %{
-        "123456" => ["D78UX1"], "foo" => []
-      },
+      users: %{"123456" => ["D78UX1"], "foo" => []},
       channels: %{"D78UX1" => ["adampash"]}
     }
 
     new_state = Twitter.Users.clean_empty(state, :users)
-    assert new_state == %{users: %{"123456" => ["D78UX1"]}, channels: %{"D78UX1" => ["adampash"]}}
+    assert new_state == %{
+      users: %{"123456" => ["D78UX1"]},
+      channels: %{"D78UX1" => ["adampash"]}
+    }
   end
 
   test "genserver api" do
