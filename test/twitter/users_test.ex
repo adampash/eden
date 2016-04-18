@@ -1,2 +1,0 @@
-# Specification of users.ex
-#

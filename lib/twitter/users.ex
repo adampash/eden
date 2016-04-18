@@ -4,11 +4,9 @@ defmodule Twitter.Users do
 
   # External API
   def start_link do
-    initial_state = Persistence.lookup(:followed_users) || empty_state
+    initial_state = Persistence.lookup(:followed_users) || Twitter.Following.new
     GenServer.start_link(__MODULE__, initial_state, name: __MODULE__)
   end
-
-  defp empty_state, do: %{users: %{}, channels: %{}}
 
   def follow({username, user}, channel) do
     GenServer.call(__MODULE__, {:follow, {username, user, channel}})
@@ -37,7 +35,7 @@ defmodule Twitter.Users do
   the user.
   """
   def handle_call({:follow, {username, user, channel}}, _from, state) do
-    new_state = follow_user(username, user, channel, state)
+    new_state = Twitter.Following.follow_user(username, user, channel, state)
     |> stream
 
     IO.puts "NEW STATE"
@@ -48,7 +46,7 @@ defmodule Twitter.Users do
   end
 
   def handle_call({:unfollow, {username, user, channel}}, _from, state) do
-    new_state = unfollow_user(username, user, channel, state)
+    new_state = Twitter.Following.unfollow_user(username, user, channel, state)
     |> stream
 
     IO.puts "NEW STATE"
@@ -59,7 +57,7 @@ defmodule Twitter.Users do
   end
 
   def handle_call({:following, channel}, _from, state) do
-    usernames = get_in(state, [:channels, channel])
+    usernames = Twitter.Following.users_for_channel(channel, state)
 
     {:reply, usernames, state}
   end
@@ -72,51 +70,6 @@ defmodule Twitter.Users do
     IO.inspect tweet.text
     {:noreply, state}
   end
-
-  def follow_user(username, user, channel, state) do
-    state
-    |> add_to([:users, user], channel)
-    |> add_to([:channels, channel], username)
-  end
-
-  defp add_to(state, path, value) do
-    state
-    |> update_in(path, fn
-      nil ->
-        [value]
-      v ->
-        Enum.uniq([value | v])
-    end)
-  end
-
-  defp remove_from(state, path, value) do
-    state
-    |> update_in(path, fn
-      nil ->
-        []
-      v ->
-        List.delete(v, value)
-    end)
-  end
-
-  def unfollow_user(username, user, channel, state) do
-    state
-    |> remove_from([:users, user], channel)
-    |> remove_from([:channels, channel], username)
-    |> clean_empty(:users)
-    |> clean_empty(:channels)
-  end
-
-  def clean_empty(state, key) do
-    val = Map.get(state, key)
-    |> Enum.filter(&_clean_empty/1)
-    |> Enum.into(%{})
-
-    Map.put(state, key, val)
-  end
-
-  defp _clean_empty({_, []}), do: false
-  defp _clean_empty({_, _}), do: true
 
   defp stream(state) do
     get_in(state, [:users])
