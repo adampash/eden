@@ -31,7 +31,8 @@ defmodule Eden.Mixfile do
     [
       {:hedwig_slack, github: "hedwig-im/hedwig_slack"},
       {:extwitter, github: "adampash/extwitter"},
-      {:gproc, "~> 0.5.0"}
+      {:gproc, "~> 0.5.0"},
+      {:exrm, "~> 0.19"},
     ]
 
   end
