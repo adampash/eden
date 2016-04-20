@@ -1,0 +1,11 @@
+#!/bin/sh
+echo "Running post-receive hook"
+git --work-tree=/build --git-dir=/deploy/eden.git checkout -f
+
+cd /build
+
+echo "Install dependencies and compile"
+MIX_ENV=prod mix do deps.get, compile
+
+echo "Building release"
+MIX_ENV=prod mix release --no-confirm-missing

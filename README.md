@@ -17,21 +17,43 @@ export SLACK_API_TOKEN=YOUR_SLACK_TOKEN
 ```
 
 # Running
-Locally:
-
+### Locally
 ```bash
 mix deps.get
 iex -S mix
 ```
 
-# Usage
-Assuming you've set up a Slack bot (which you should have done, since you had to set up an API token above), and that bot's name is *eden*, you should be able to open your Slack channel and type commands like:
+### Deploy
+I'm running eden on a Digital Ocean server using exrm and conform. With the code on your server, you'll want to run:
 
-*Follow a user*
+```bash
+# Install dependencies and compile
+MIX_ENV=prod mix do deps.get, compile
+
+# Setting up environment; make sure environment vars are in place
+MIX_ENV=prod mix conform.new
+MIX_ENV=prod mix conform.configure
+
+# Building release
+MIX_ENV=prod mix release --no-confirm-missing # Ignore neotama warning
+```
+
+On subsequent deploys, I'm using [this post-receive script](./post-receive), which you may or may not want to customize to your needs.
+
+Once your release is built, start eden by running:
+
+```bash
+/build/rel/eden/bin/eden start # assuming your exrm build folder is at /build
+```
+
+# Usage
+Assuming you've set up a Slack bot (which you should have done, since you had to set up an API token above), and that bot's name is **eden**, you should be able to open your Slack channel and type commands like:
+
+**Follow a user**
 `eden follow adampash`
 
-*See a list of who you're following*
+**See a list of who you're following**
 `eden following`
 
-*Unfollow a user*
+**Unfollow a user**
 `eden unfollow adampash`
