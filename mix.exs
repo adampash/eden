@@ -14,7 +14,7 @@ defmodule Eden.Mixfile do
   #
   # Type "mix help compile.app" for more information
   def application do
-    [applications: [:logger, :hedwig_slack, :extwitter, :gproc],
+    [applications: [:logger, :hedwig_slack, :extwitter, :gproc, :oauth],
      mod: {Eden, []}]
   end
 
