@@ -32,7 +32,7 @@ defmodule Eden.Mixfile do
       {:hedwig_slack, github: "hedwig-im/hedwig_slack"},
       {:extwitter, github: "adampash/extwitter"},
       {:gproc, "~> 0.5.0"},
-      {:exrm, "~> 0.19"},
+      {:exrm, "~> 1.0"},
       {:conform, "~> 0.17"},
       {:oauth, git: "https://github.com/tim/erlang-oauth.git"},
     ]
