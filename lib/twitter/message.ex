@@ -11,7 +11,7 @@ defmodule Twitter.Message do
         robot: pid,
         room: channel,
         type: "message",
-        text: "https://twitter.com/#{tweet.user.screen_name}/status/#{tweet.id}"
+        text: Twitter.Helper.tweet_url(tweet)
       }
       {pid, message}
     end)

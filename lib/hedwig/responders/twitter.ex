@@ -55,7 +55,7 @@ defmodule Hedwig.Responders.Twitter do
     end
     user = ExTwitter.user(username)
     Twitter.Users.unfollow({user.screen_name, user.id_str}, msg.room)
-    resp = "you got it. I'll stop following #{user.screen_name} for this channel"
+    resp = "you got it. I'll stop following *#{user.screen_name}* for this channel"
 
     reply msg, resp
   end
@@ -88,6 +88,17 @@ defmodule Hedwig.Responders.Twitter do
   end
 
   defp found_users_message([]), do: ""
+  defp found_users_message([username]) do
+    tweet = ExTwitter.user(username).status
+    """
+    You got it. I'll start following *#{username}* and posting \
+    new tweets to this channel.
+
+    Here's the latest from #{username}:
+
+    #{Twitter.Helper.tweet_url(tweet, username)}
+    """
+  end
   defp found_users_message(users) do
     """
     You got it. I'll start following *#{Enum.join(users, ", ")}* and posting \
