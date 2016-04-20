@@ -8,6 +8,10 @@ defmodule Twitter.Users do
     GenServer.start_link(__MODULE__, initial_state, name: __MODULE__)
   end
 
+  def mass_follow(users, channel) do
+    GenServer.call(__MODULE__, {:mass_follow, {users, channel}})
+  end
+
   def follow({username, user}, channel) do
     GenServer.call(__MODULE__, {:follow, {username, user, channel}})
   end
@@ -43,6 +47,23 @@ defmodule Twitter.Users do
 
     Persistence.insert(:followed_users, new_state)
     {:reply, "Following #{user}", new_state}
+  end
+
+  def handle_call({:mass_follow, {users, channel}}, _from, state) do
+    # users = %{"adam" => {"Adam", "18"}, "bob" => {"Bob", "344"}}
+    # Enum.reduce(users, %{}, fn {_, {username, user_id}}, acc -> {username, user_id} end)
+    # state = %{channels: %{}, users: %{}}
+    # channel = "adf"
+    new_state = Enum.reduce(users, state, fn {username, user_id}, acc ->
+      Twitter.Following.follow_user(username, user_id, channel, acc)
+    end)
+    |> stream
+
+    IO.puts "NEW STATE"
+    IO.inspect new_state
+
+    Persistence.insert(:followed_users, new_state)
+    {:reply, :ok, new_state}
   end
 
   def handle_call({:unfollow, {username, user, channel}}, _from, state) do

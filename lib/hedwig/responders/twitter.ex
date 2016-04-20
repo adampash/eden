@@ -3,31 +3,43 @@ defmodule Hedwig.Responders.Twitter do
   use Hedwig.Responder
 
   @usage """
-  eden follow ev - follows a user and puts tweets in the current channel (or DMs them to you if you're not in a channel)
+  eden follow ev - follows a user and puts tweets in the current channel \
+  (or DMs them to you if you're not in a channel)
   """
   respond ~r/follow\s+(.+)$/i, msg do
-    users = String.split(msg.matches[1], ~r/\s?,/)
-    IO.inspect users
-    for username <- users do
-      resp = try do
-        user = ExTwitter.user(username)
-        Twitter.Users.follow({user.screen_name, user.id_str}, msg.room)
-        link = "https://twitter.com/#{user.screen_name}/status/#{user.status.id}"
-        """
-          You got it. I'll start following `#{user.screen_name}` and posting new tweets to this channel.
-          Here's the latest from `#{user.screen_name}`:
-          #{link}
-        """
-      rescue ExTwitter.Error ->
-        case ExTwitter.user_search(username, count: 1, include_entities: false) do
-          [user] ->
-            "Hmm... couldn't find a twitter user called #{username} :thinking_face:. Maybe you meant #{user.screen_name}?"
-          _ ->
-            "Hmm... couldn't find a twitter user called #{username} :thinking_face:."
-        end
+    usernames = String.split(msg.matches[1], ~r/\s?,/)
+    |> Enum.map(&String.strip/1)
+
+    users = usernames
+    |> Enum.join(",")
+    |> ExTwitter.user_lookup
+
+    usermap = usernames
+    |> Enum.reduce(%{}, fn username, acc ->
+      val = Enum.find(users, fn u ->
+        String.downcase(username) == String.downcase(u.screen_name)
+      end)
+      case val do
+        nil -> Map.put(acc, username, nil)
+        user -> Map.put(acc, username, {user.screen_name, user.id_str})
       end
-      reply msg, resp
-    end
+    end)
+    |> follow_users(msg.room)
+
+    found_users = usermap
+    |> Enum.filter(fn {_, v} -> is_tuple(v) end)
+    |> Enum.into(%{})
+    |> Map.keys
+
+    not_found = usermap
+    |> Enum.filter(fn {_, v} -> is_nil(v) end)
+    |> Enum.into(%{})
+    |> Map.keys
+
+    resp = found_users_message(found_users)
+    |> not_found_users_message(not_found)
+
+    reply msg, resp
   end
 
   @usage """
@@ -56,5 +68,30 @@ defmodule Hedwig.Responders.Twitter do
     |> Stream.with_index(1)
     |> Enum.map(fn {k, v} -> "\n#{v}. #{k}" end)
     reply msg, "here are the twitter users I'm following for this channel:\n#{users}"
+  end
+
+  defp follow_users(usermap, room) do
+    usermap
+    |> Map.values
+    |> Enum.filter(&is_tuple/1)
+    |> Twitter.Users.mass_follow(room)
+
+    usermap
+  end
+
+  defp found_users_message([]), do: ""
+  defp found_users_message(users) do
+    """
+    You got it. I'll start following *#{Enum.join(users, ", ")}* and posting \
+    new tweets to this channel.
+    """
+  end
+
+  defp not_found_users_message(msg, []), do: msg
+  defp not_found_users_message(msg, users) do
+    msg <> """
+
+    Unfortunately I couldn't find any users matching *#{Enum.join(users, ", ")}*
+    """
   end
 end
