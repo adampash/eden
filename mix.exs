@@ -34,6 +34,7 @@ defmodule Eden.Mixfile do
       {:gproc, "~> 0.5.0"},
       {:exrm, "~> 0.19"},
       {:conform, "~> 0.17"},
+      {:oauth, git: "https://github.com/tim/erlang-oauth.git"},
     ]
 
   end
