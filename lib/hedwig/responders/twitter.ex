@@ -74,7 +74,7 @@ defmodule Hedwig.Responders.Twitter do
 
     resp = case users do
       [] -> """
-            It doesn't look like you're following any twitter users in this \
+            It doesn't look like you're following any Twitter users in this \
             channel. To follow someone, type, e.g., `eden follow potus`
             """
       users -> "here are the twitter users I'm following for this channel:\n#{users}"
