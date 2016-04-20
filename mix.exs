@@ -33,6 +33,7 @@ defmodule Eden.Mixfile do
       {:extwitter, github: "adampash/extwitter"},
       {:gproc, "~> 0.5.0"},
       {:exrm, "~> 0.19"},
+      {:conform, "~> 0.17"},
     ]
 
   end
