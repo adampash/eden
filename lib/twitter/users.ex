@@ -20,6 +20,10 @@ defmodule Twitter.Users do
     GenServer.call(__MODULE__, {:unfollow, {username, user, channel}})
   end
 
+  def get_user_at(index, channel) do
+    GenServer.call(__MODULE__, {:user_at, {index, channel}})
+  end
+
   def new_tweet(tweet) do
     GenServer.cast(__MODULE__, {:new_tweet, tweet})
   end
@@ -81,6 +85,11 @@ defmodule Twitter.Users do
     usernames = Twitter.Following.users_for_channel(channel, state)
 
     {:reply, usernames, state}
+  end
+
+  def handle_call({:user_at, {index, channel}}, _, state) do
+    username = Twitter.Following.user_at(index, channel, state)
+    {:reply, username, state}
   end
 
   def handle_cast({:new_tweet, tweet}, state) do

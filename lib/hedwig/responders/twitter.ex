@@ -46,17 +46,17 @@ defmodule Hedwig.Responders.Twitter do
   eden unfollow ev - unfollows a user from the current channel (or your DMs)
   """
   respond ~r/unfollow\s+(\w+)/i, msg do
-    username = msg.matches[1]
+    username = cond do
+      msg.matches[1] =~ ~r/^\d+$/ -> # it's a digit
+        index = String.to_integer(msg.matches[1]) - 1
+        Twitter.Users.get_user_at(index, msg.room)
+      true ->
+        msg.matches[1]
+    end
     user = ExTwitter.user(username)
     Twitter.Users.unfollow({user.screen_name, user.id_str}, msg.room)
-    resp = "you got it. I'll stop following #{msg.matches[1]} for this channel"
-    # resp = case ExTwitter.user(username, count: 1, include_entities: false) do
-    #   user ->
-    #     Twitter.Users.unfollow({user.screen_name, user.id_str}, msg.room)
-    #     "you got it. I'll stop following #{msg.matches[1]} for this channel"
-      # _ ->
-      #   "Hmm... I couldn't find a twitter user called #{username} :thinking_face:"
-    # end
+    resp = "you got it. I'll stop following #{user.screen_name} for this channel"
+
     reply msg, resp
   end
 

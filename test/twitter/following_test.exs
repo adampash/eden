@@ -39,4 +39,14 @@ defmodule Twitter.FollowingTest do
     following = Twitter.Following.users_for_channel("foo", %{channels: %{}, users: %{}})
     assert following == []
   end
+
+  test "returns a username by index number" do
+    state = %{
+      users: %{"123456" => ["D78UX1"], "2345" => ["D78UX1"]},
+      channels: %{"D78UX1" => ["adampash", "bob"]}
+    }
+    username = Twitter.Following.user_at(1, "D78UX1", state)
+
+    assert username == "bob"
+  end
 end

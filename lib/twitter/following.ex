@@ -22,6 +22,11 @@ defmodule Twitter.Following do
     |> clean_empty(:channels)
   end
 
+  def user_at(index, channel, state) do
+    users_for_channel(channel, state)
+    |> Enum.at(index, :not_found)
+  end
+
   defp clean_empty(state, key) do
     val = Map.get(state, key)
     |> Enum.filter(&_clean_empty/1)
