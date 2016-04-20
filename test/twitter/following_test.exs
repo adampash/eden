@@ -35,4 +35,8 @@ defmodule Twitter.FollowingTest do
     assert new_state == %{users: %{}, channels: %{}}
   end
 
+  test "returns an empty array when not following any users for a room" do
+    following = Twitter.Following.users_for_channel("foo", %{channels: %{}, users: %{}})
+    assert following == []
+  end
 end

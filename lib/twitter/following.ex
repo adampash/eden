@@ -11,7 +11,7 @@ defmodule Twitter.Following do
   end
 
   def users_for_channel(channel, state) do
-    get_in(state, [:channels, channel])
+    get_in(state, [:channels, channel]) || []
   end
 
   def unfollow_user(username, user, channel, state) do
