@@ -59,7 +59,7 @@ defmodule Hedwig.Responders.Twitter do
     end
     user = ExTwitter.user(username)
     Twitter.Users.unfollow({user.screen_name, user.id_str}, msg.room)
-    resp = "you got it. I'll stop following *#{user.screen_name}* for this channel"
+    resp = "no problem. I'll stop following *#{user.screen_name}* for this channel"
 
     reply msg, resp
   end
