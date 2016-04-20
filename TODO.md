@@ -1,5 +1,5 @@
 ## TODO:
 
-- Unfollow by digits
-- fix whatever is causing db issues
-- fix eden following when not following anyway (currently breaks)
+x Unfollow by digits
+x fix whatever is causing db issues
+x fix eden following when not following anyway (currently breaks)
