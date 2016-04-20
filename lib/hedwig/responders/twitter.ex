@@ -7,37 +7,41 @@ defmodule Hedwig.Responders.Twitter do
   (or DMs them to you if you're not in a channel)
   """
   respond ~r/follow\s+(.+)$/i, msg do
-    usernames = String.split(msg.matches[1], ~r/\s?,/)
-    |> Enum.map(&String.strip/1)
+      usernames = String.split(msg.matches[1], ~r/\s?,/)
+      |> Enum.map(&String.strip/1)
 
-    users = usernames
-    |> Enum.join(",")
-    |> ExTwitter.user_lookup
+    resp = try do
+      users = usernames
+      |> Enum.join(",")
+      |> ExTwitter.user_lookup
 
-    usermap = usernames
-    |> Enum.reduce(%{}, fn username, acc ->
-      val = Enum.find(users, fn u ->
-        String.downcase(username) == String.downcase(u.screen_name)
+      usermap = usernames
+      |> Enum.reduce(%{}, fn username, acc ->
+        val = Enum.find(users, fn u ->
+          String.downcase(username) == String.downcase(u.screen_name)
+        end)
+        case val do
+          nil -> Map.put(acc, username, nil)
+          user -> Map.put(acc, username, {user.screen_name, user.id_str})
+        end
       end)
-      case val do
-        nil -> Map.put(acc, username, nil)
-        user -> Map.put(acc, username, {user.screen_name, user.id_str})
-      end
-    end)
-    |> follow_users(msg.room)
+      |> follow_users(msg.room)
 
-    found_users = usermap
-    |> Enum.filter(fn {_, v} -> is_tuple(v) end)
-    |> Enum.into(%{})
-    |> Map.keys
+      found_users = usermap
+      |> Enum.filter(fn {_, v} -> is_tuple(v) end)
+      |> Enum.into(%{})
+      |> Map.keys
 
-    not_found = usermap
-    |> Enum.filter(fn {_, v} -> is_nil(v) end)
-    |> Enum.into(%{})
-    |> Map.keys
+      not_found = usermap
+      |> Enum.filter(fn {_, v} -> is_nil(v) end)
+      |> Enum.into(%{})
+      |> Map.keys
 
-    resp = found_users_message(found_users)
-    |> not_found_users_message(not_found)
+      found_users_message(found_users)
+      |> not_found_users_message(not_found)
+    rescue _ ->
+      not_found_users_message("", usernames)
+    end
 
     reply msg, resp
   end
