@@ -77,7 +77,14 @@ defmodule Hedwig.Responders.Twitter do
             It doesn't look like you're following any Twitter users in this \
             channel. To follow someone, type, e.g., `eden follow potus`
             """
-      users -> "here are the twitter users I'm following for this channel:\n#{users}"
+      users ->
+        """
+        here are the twitter users I'm following for this channel:\n#{users}
+
+        You can quickly unfollow anyone on this list by typing \
+        `eden unfollow username` or `eden unfollow 1` (or some other number \
+        in the list)
+        """
     end
     reply msg, resp
   end
