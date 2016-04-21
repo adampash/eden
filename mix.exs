@@ -3,7 +3,7 @@ defmodule Eden.Mixfile do
 
   def project do
     [app: :eden,
-     version: "0.0.3",
+     version: "0.0.4",
      elixir: "~> 1.2",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
@@ -14,7 +14,14 @@ defmodule Eden.Mixfile do
   #
   # Type "mix help compile.app" for more information
   def application do
-    [applications: [:logger, :hedwig_slack, :extwitter, :gproc, :oauth],
+    [applications: [
+        :logger,
+        :hedwig_slack,
+        :extwitter,
+        :gproc,
+        :oauth,
+        :runtime_tools
+      ],
      mod: {Eden, []}]
   end
 
