@@ -36,7 +36,8 @@ defmodule Eden.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [
-      {:hedwig_slack, github: "hedwig-im/hedwig_slack"},
+      {:hedwig_slack, "~> 0.1"},
+      # {:hedwig_slack, github: "hedwig-im/hedwig_slack"},
       {:extwitter, github: "adampash/extwitter"},
       {:gproc, "~> 0.5.0"},
       {:exrm, "~> 1.0"},
