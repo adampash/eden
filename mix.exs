@@ -20,7 +20,9 @@ defmodule Eden.Mixfile do
         :extwitter,
         :gproc,
         :oauth,
-        :runtime_tools
+        :runtime_tools,
+        :conform,
+        :conform_exrm,
       ],
      mod: {Eden, []}]
   end
@@ -37,11 +39,11 @@ defmodule Eden.Mixfile do
   defp deps do
     [
       {:hedwig_slack, "~> 0.1"},
-      # {:hedwig_slack, github: "hedwig-im/hedwig_slack"},
       {:extwitter, github: "adampash/extwitter"},
       {:gproc, "~> 0.5.0"},
-      {:exrm, "~> 1.0"},
-      {:conform, "~> 0.17"},
+      {:exrm, "~> 1.0.3", override: true},
+      {:conform, "~> 2.0.0", override: true},
+      {:conform_exrm, "~> 1.0.0"},
       {:oauth, git: "https://github.com/tim/erlang-oauth.git"},
     ]
 

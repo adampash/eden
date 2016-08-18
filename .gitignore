@@ -6,3 +6,5 @@ erl_crash.dump
 .envrc
 /db/*
 /rel
+/config/eden.conf
+/config/eden.schema.exs
